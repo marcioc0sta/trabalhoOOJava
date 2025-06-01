@@ -44,7 +44,7 @@ public class Database {
 
     public static List<Produto> GetProducts() {
         List<Produto> produtos = new ArrayList<>();
-        String sql = "SELECT nome, preco, quantidade FROM produtos";
+        String sql = "SELECT id, nome, preco, quantidade FROM produtos ORDER BY id";
 
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -54,7 +54,8 @@ public class Database {
                 String nome = rs.getString("nome");
                 double preco = rs.getDouble("preco");
                 int quantidade = rs.getInt("quantidade");
-                produtos.add(new Produto(nome, preco, quantidade));
+                int id = rs.getInt("id");
+                produtos.add(new Produto(id, nome, preco, quantidade));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -72,6 +73,22 @@ public class Database {
             pstmt.setString(1, produto.getNome());
             pstmt.setDouble(2, produto.getPreco());
             pstmt.setInt(3, produto.getQuantidade());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void UpdateProduct(Produto produto) {
+        String sql = "UPDATE produtos SET preco = ?, quantidade = ?, nome = ? WHERE id = ?";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setDouble(1, produto.getPreco());
+            pstmt.setInt(2, produto.getQuantidade());
+            pstmt.setString(3, produto.getNome());
+            pstmt.setInt(4, produto.getId()); // Pass id as integer
             pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

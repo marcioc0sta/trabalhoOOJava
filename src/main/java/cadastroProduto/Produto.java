@@ -1,14 +1,20 @@
 package cadastroProduto;
 
 public class Produto {
+    private int id;
     private String nome;
     private int quantidade;
     private double preco;
 
-    public Produto(String nome, double preco, int quantidade) {
+    public Produto(int id, String nome, double preco, int quantidade) {
+        this.id = id;
         this.nome = nome;
         this.preco = preco;
         this.quantidade = quantidade;
+    }
+
+    public Produto(String nome, double preco, int quantidade) {
+        this(-1, nome, preco, quantidade);
     }
 
     public String getNome() {
@@ -21,6 +27,10 @@ public class Produto {
 
     public int getQuantidade() {
         return quantidade;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public static Produto fromFields(String nome, String precoStr, String quantidadeStr) {
@@ -48,9 +58,8 @@ public class Produto {
 
     @Override
     public String toString() {
-        return String.format("Nome: %s | Preço: R$ %.2f | Quantidade: %d", nome, preco, quantidade);
+        return String.format("ID: %d | Nome: %s | Preço: R$ %.2f | Quantidade: %d", id, nome, preco, quantidade);
     }
 
 }
-
 

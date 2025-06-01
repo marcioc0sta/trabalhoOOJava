@@ -10,8 +10,9 @@ import java.util.List;
 public class Main extends JFrame {
     private JTextField campoNome, campoPreco, campoQuantidade;
     private JButton botaoCadastrar, botaoLimpar, botaoListar, botaoExcluir, botaoAtualizar;
-    private JTextArea areaProdutos;
     private JLabel labelLista;
+    private DefaultListModel<Produto> produtoListModel;
+    private JList<Produto> listaProdutosJList;
 
     public Main() {
         super("Cadastro de Produtos");
@@ -43,9 +44,20 @@ public class Main extends JFrame {
         botaoListar.setPreferredSize(botaoSize);
         botaoListar.setBackground(corLilás);
 
-        areaProdutos = new JTextArea(10, 40);
-        areaProdutos.setEditable(false);
-        areaProdutos.setVisible(false);
+        produtoListModel = new DefaultListModel<>();
+        listaProdutosJList = new JList<>(produtoListModel);
+        listaProdutosJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        listaProdutosJList.setVisible(false);
+        listaProdutosJList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Produto selected = listaProdutosJList.getSelectedValue();
+                if (selected != null) {
+                    campoNome.setText(selected.getNome());
+                    campoPreco.setText(String.valueOf(selected.getPreco()));
+                    campoQuantidade.setText(String.valueOf(selected.getQuantidade()));
+                }
+            }
+        });
 
         labelLista = new JLabel("Produtos Cadastrados:");
         labelLista.setVisible(false);
@@ -85,7 +97,7 @@ public class Main extends JFrame {
         JPanel painelLista = new JPanel(new BorderLayout());
         painelLista.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         painelLista.add(labelLista, BorderLayout.NORTH);
-        painelLista.add(new JScrollPane(areaProdutos), BorderLayout.CENTER);
+        painelLista.add(new JScrollPane(listaProdutosJList), BorderLayout.CENTER);
 
         setLayout(new BorderLayout());
         add(painelSuperior, BorderLayout.NORTH);
@@ -94,6 +106,7 @@ public class Main extends JFrame {
         botaoCadastrar.addActionListener(e -> cadastrarProduto());
         botaoLimpar.addActionListener(e -> limparCampos());
         botaoListar.addActionListener(e -> listarProdutos());
+        botaoAtualizar.addActionListener(e -> atualizaProduto());
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1600, 1200);
@@ -127,22 +140,46 @@ public class Main extends JFrame {
         campoPreco.setText("");
         campoQuantidade.setText("");
     }
-    private void listarProdutos() {
-        StringBuilder sb = new StringBuilder();
-        List<Produto> listaProdutos = Database.GetProducts();
 
+    private void atualizaProduto() {
+        Produto selected = listaProdutosJList.getSelectedValue();
+        if (selected == null || selected.getId() == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto válido para atualizar.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        try {
+            String nome = campoNome.getText();
+            double preco = Double.parseDouble(campoPreco.getText());
+            int quantidade = Integer.parseInt(campoQuantidade.getText());
+            Produto atualizado = new Produto(selected.getId(), nome, preco, quantidade);
+            Database.UpdateProduct(atualizado);
+            JOptionPane.showMessageDialog(this, "Produto atualizado com sucesso!");
+            listarProdutos();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Preço ou quantidade inválidos. Digite números válidos.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void listarProdutos() {
+        produtoListModel.clear();
+        List<Produto> listaProdutos = Database.GetProducts();
         if (listaProdutos.isEmpty()) {
-            sb.append("Nenhum produto cadastrado.");
+            produtoListModel.addElement(new Produto("Nenhum produto cadastrado.", 0, 0));
+            listaProdutosJList.setEnabled(false);
         } else {
             for (Produto p : listaProdutos) {
-                sb.append(p).append("\n");
+                produtoListModel.addElement(p);
             }
+            listaProdutosJList.setEnabled(true);
         }
         labelLista.setVisible(true);
-        areaProdutos.setText(sb.toString());
-        areaProdutos.setVisible(true);
+        listaProdutosJList.setVisible(true);
     }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::new);
     }
 }
+

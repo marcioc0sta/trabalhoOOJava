@@ -94,4 +94,54 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    public static Produto GetProductById(int id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID inválido. Deve ser maior que zero.");
+        }
+        String sql = "SELECT nome, preco, quantidade FROM produtos WHERE id = ?";
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String nome = rs.getString("nome");
+                    double preco = rs.getDouble("preco");
+                    int quantidade = rs.getInt("quantidade");
+                    return new Produto(id, nome, preco, quantidade);
+                } else {
+                    throw new IllegalArgumentException("Produto não encontrado.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public static void DeleteProduct(int id) {
+        Produto produto = GetProductById(id);
+        if (produto == null) {
+            throw new IllegalArgumentException("Produto não encontrado.");
+        }
+        if (produto.getQuantidade() > 1) {
+            String updateSql = "UPDATE produtos SET quantidade = quantidade - 1 WHERE id = ?";
+            try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+                 PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                updateStmt.setInt(1, id);
+                updateStmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            String deleteSql = "DELETE FROM produtos WHERE id = ?";
+            try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+                 PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                deleteStmt.setInt(1, id);
+                deleteStmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

@@ -107,6 +107,7 @@ public class Main extends JFrame {
         botaoLimpar.addActionListener(e -> limparCampos());
         botaoListar.addActionListener(e -> listarProdutos());
         botaoAtualizar.addActionListener(e -> atualizaProduto());
+        botaoExcluir.addActionListener(e -> exluirProduto());
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1600, 1200);
@@ -176,6 +177,20 @@ public class Main extends JFrame {
         }
         labelLista.setVisible(true);
         listaProdutosJList.setVisible(true);
+    }
+
+    private void exluirProduto() {
+        Produto selected = listaProdutosJList.getSelectedValue();
+        if (selected == null || selected.getId() == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto válido para excluir.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        int confirm = JOptionPane.showConfirmDialog(this, "Tem certeza que deseja excluir o produto selecionado?", "Confirmação", JOptionPane.YES_NO_OPTION);
+        if (confirm == JOptionPane.YES_OPTION) {
+            Database.DeleteProduct(selected.getId());
+            JOptionPane.showMessageDialog(this, "Produto excluído com sucesso!");
+            listarProdutos();
+        }
     }
 
     public static void main(String[] args) {
